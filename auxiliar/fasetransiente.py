@@ -29,7 +29,7 @@ class FaseTransiente:
                 trata(proximo_evento, estado_do_servidor, lista_de_eventos, fila_de_espera,
                       gerador_exponencial, id_proximo_fregues, metricas_fase_transiente[id_janela_de_tempo])
 
-            # Avaliacao de fase transiente:
+            # Avaliacao de fase transiente e preparacao para plotagem de grafico (por default nao aparece)
             if proximo_evento.instante >= fim_janela_de_tempo:
                 fim_janela_de_tempo = proximo_evento.instante
                 grafico_fase_transiente_x.append(fim_janela_de_tempo / 60)  # eixo x em minutos

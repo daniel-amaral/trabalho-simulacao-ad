@@ -1,7 +1,6 @@
 import random as random
 import time as time
 import matplotlib.pyplot as plt
-
 from auxiliar.execucaoprincipal import ExecucaoPrincipal
 from auxiliar.fasetransiente import FaseTransiente
 from distribuicoes import exponencial
@@ -15,6 +14,7 @@ from auxiliar.metricas import Metricas
 from auxiliar import funcoesauxiliares, trataevento
 from entidades import fregues, evento
 
+
 # Valores absolutos definidos na descricao do trabalho:
 tempo_medio_servico = 1.0
 numero_de_rodadas = 10
@@ -26,9 +26,23 @@ disciplinas = [Disciplina.FCFS, Disciplina.LCFS]
 # Declaracao de funcoes auxiliares
 trata_evento = trataevento.TrataEvento()
 aux = funcoesauxiliares.FuncoesAuxiliares()
+
+# recuperando a ultima semente utilizada pelo gerador de numeros aleatorios (se existir)
 gerador_numeros_aleatorios = random
+try:
+    nome_arquivo_seed = 'seed'
+    seed = open(nome_arquivo_seed, 'r').read()
+    gerador_numeros_aleatorios.seed(seed)
+except:
+    pass
+
+
+# estruturas que controlam as fases transientes e principal
 fase_transiente = FaseTransiente()
 execucao_principal = ExecucaoPrincipal()
+
+
+inicio_da_execucao = time.time()
 
 # Grandes lacos (loops) do simulador:
 for disciplina in disciplinas:
@@ -57,9 +71,16 @@ for disciplina in disciplinas:
                                     trata_evento, gerador_exponencial, metricas_fase_transiente, utilizacao)
 
         # Execucao principal em modo batch:
-        kmin = 3200
-        metricas_execucao_principal = []
-        trata_evento.set_primeiro_fregues_a_avaliar(id_proximo_fregues)
+        kmin = 3200 # numero de rodadas inicial
+        metricas_execucao_principal = [] # para cada rodada as metricas sao avaliadas separadamente
         lista_de_eventos, id_proximo_fregues, estado_do_servidor = \
             execucao_principal.rodar(kmin, id_proximo_fregues, lista_de_eventos, fila_de_espera, estado_do_servidor,
                                      trata_evento, gerador_exponencial, metricas_execucao_principal, utilizacao)
+
+
+print('Duracao da simulacao: %s' %aux.duracao_to_str(inicio_da_execucao, time.time()))
+
+# A semente do gerador de numeros aleatorios e' persistida em arquivo para ser utilizada na proxima execucao do programa
+estado_final_do_gerador = gerador_numeros_aleatorios.getstate()
+file = open(nome_arquivo_seed, 'w')
+file.write(str(estado_final_do_gerador))

@@ -1,3 +1,4 @@
+import math
 
 
 class Metricas():
@@ -71,5 +72,16 @@ class Metricas():
         xis = self.__tempos_no_sistema
         n = self.num_fregueses_sairam_do_sistema
         return self.__estimador_variancia(xis, n)
+
+    @property
+    def estimador_da_variancia_para_chi_quadrado(self):
+        soma_wis = sum(self.__tempos_na_fila)
+        soma_global = 0.0
+        k = 1
+        for wi in self.__tempos_na_fila:
+            soma_global += math.pow((wi - (soma_wis)/k), 2)
+            k += 1
+        variancia = soma_global / len(self.__tempos_na_fila)
+        return variancia
 
 
