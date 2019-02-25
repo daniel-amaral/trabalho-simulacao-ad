@@ -25,3 +25,7 @@ class FilaDeEspera:
     @property
     def count(self):
         return len(self.__fila)
+
+    @property
+    def disciplina(self):
+        return self.__disciplina
