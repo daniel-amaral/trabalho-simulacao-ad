@@ -1,0 +1,1 @@
+UNIDADE_DE_TEMPO = 's'
