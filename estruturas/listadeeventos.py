@@ -15,3 +15,10 @@ class ListaDeEventos:
     def proximo_evento(self):
         return heapq.heappop(self.__lista_de_eventos)
 
+    @property
+    def proximo_instante_de_evento(self):
+        proximo_evento = heapq.heappop(self.__lista_de_eventos)
+        instante = proximo_evento.instante
+        heapq.heappush(self.__lista_de_eventos, proximo_evento)
+        return instante
+

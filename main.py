@@ -1,8 +1,11 @@
 import random as random
 import time as time
 import matplotlib.pyplot as plt
+
+from auxiliar.execucaoprincipal import ExecucaoPrincipal
 from auxiliar.fasetransiente import FaseTransiente
 from distribuicoes import exponencial
+from entidades.evento import Evento
 from enums.disciplina import Disciplina
 from enums.tipoevento import TipoEvento
 from enums.estadoservidor import EstadoServidor
@@ -25,6 +28,7 @@ trata_evento = trataevento.TrataEvento()
 aux = funcoesauxiliares.FuncoesAuxiliares()
 gerador_numeros_aleatorios = random
 fase_transiente = FaseTransiente()
+execucao_principal = ExecucaoPrincipal()
 
 # Grandes lacos (loops) do simulador:
 for disciplina in disciplinas:
@@ -33,6 +37,10 @@ for disciplina in disciplinas:
     lista_de_eventos = ListaDeEventos()
     fila_de_espera = FilaDeEspera(disciplina)
     id_proximo_fregues = 0
+    instante_proximo_evento = 0.0
+    proximo_evento = Evento(TipoEvento.chegada, instante_proximo_evento)
+    lista_de_eventos.insere_evento(proximo_evento)
+    estado_do_servidor = EstadoServidor.livre
 
     for utilizacao in utilizacoes:
 
@@ -42,8 +50,16 @@ for disciplina in disciplinas:
         gerador_exponencial = exponencial.Exponencial(taxa_de_chegada, taxa_de_servico, gerador_numeros_aleatorios)
 
         # Execucao da fase transiente:
-        tempo_fase_transiente = 0.0
         metricas_fase_transiente = [] # para cada Delta(t) da fase transiente metricas sao avaliadas separadamente
-        id_proximo_fregues = fase_transiente.rodar(id_proximo_fregues, lista_de_eventos,
-                                                  fila_de_espera, trata_evento, gerador_exponencial,
-                                                  metricas_fase_transiente, utilizacao)
+        trata_evento.set_primeiro_fregues_a_avaliar(id_proximo_fregues)
+        lista_de_eventos, id_proximo_fregues, estado_do_servidor \
+            = fase_transiente.rodar(id_proximo_fregues, lista_de_eventos, fila_de_espera, estado_do_servidor,
+                                    trata_evento, gerador_exponencial, metricas_fase_transiente, utilizacao)
+
+        # Execucao principal em modo batch:
+        kmin = 3200
+        metricas_execucao_principal = []
+        trata_evento.set_primeiro_fregues_a_avaliar(id_proximo_fregues)
+        lista_de_eventos, id_proximo_fregues, estado_do_servidor = \
+            execucao_principal.rodar(kmin, id_proximo_fregues, lista_de_eventos, fila_de_espera, estado_do_servidor,
+                                     trata_evento, gerador_exponencial, metricas_execucao_principal, utilizacao)

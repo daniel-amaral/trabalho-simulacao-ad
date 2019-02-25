@@ -7,22 +7,17 @@ import matplotlib.pyplot as plt
 
 class FaseTransiente:
 
-    def rodar(self, id_proximo_fregues, lista_de_eventos, fila_de_espera,
+    def rodar(self, id_proximo_fregues, lista_de_eventos, fila_de_espera, estado_do_servidor,
               trata_evento, gerador_exponencial, metricas_fase_transiente, utilizacao):
 
-        print ('\nInicio de fase transiente: %s, utilizacao: %.1f' % (fila_de_espera.disciplina.name, utilizacao))
+        print ('Inicio de fase transiente: %s, utilizacao: %.1f' % (fila_de_espera.disciplina.name, utilizacao))
         inicio_fase_transiente = time.time()
-
-        # Configuracao de inicio do sistema
-        estado_do_servidor = EstadoServidor.livre
-        evento_chegada_inicial = Evento(TipoEvento.chegada, 0.0)
-        lista_de_eventos.insere_evento(evento_chegada_inicial)
 
         # Configuracao para avaliacao das janelas de tempo na fase transiente
         id_janela_de_tempo = 0
         metricas_fase_transiente.append(Metricas())
         janela_de_tempo = 60.0 * (10 / utilizacao)  # em segundos
-        fim_janela_de_tempo = janela_de_tempo
+        fim_janela_de_tempo = janela_de_tempo + lista_de_eventos.proximo_instante_de_evento
         grafico_fase_transiente_x = []
         grafico_fase_transiente_y = []
         grafico_fase_transiente_erro = []
@@ -30,9 +25,6 @@ class FaseTransiente:
         # Rodadas da fase transiente:
         while True:
             proximo_evento = lista_de_eventos.proximo_evento()
-            print_var = False
-            if proximo_evento.tipo_de_evento == TipoEvento.saida:
-                print_var = True
             estado_do_servidor = trata_evento. \
                 trata(proximo_evento, estado_do_servidor, lista_de_eventos, fila_de_espera,
                       gerador_exponencial, id_proximo_fregues, metricas_fase_transiente[id_janela_de_tempo])
@@ -66,13 +58,14 @@ class FaseTransiente:
                     break
                 id_janela_de_tempo += 1
 
+            # em caso de ter sido tratado uma nova chegada, incrementar o id do proximo fregues
             if proximo_evento.tipo_de_evento == TipoEvento.chegada:
                 id_proximo_fregues = proximo_evento.fregues.id + 1
 
         duracao = time.time() - inicio_fase_transiente
         duracao_minutos = int(duracao / 60)
         duracao_segundos = duracao - (duracao_minutos * 60)
-        print ('Fim da fase transiente! Duracao: %dmin%.2fs\n' % (duracao_minutos, duracao_segundos))
+        print ('Fim da fase transiente! Duracao: %dmin%.2fs' % (duracao_minutos, duracao_segundos))
 
         # Plot de grafico sobre fase transiente (utilizado apenas em analises de corretude do trabalho):
         # media_das_variancias_na_fase_transiente = sum(grafico_fase_transiente_y) / len(grafico_fase_transiente_y)
@@ -87,4 +80,4 @@ class FaseTransiente:
         # plt.title('Fase Transiente')
         # plt.show()
 
-        return id_proximo_fregues
+        return lista_de_eventos, id_proximo_fregues, estado_do_servidor
